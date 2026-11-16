@@ -2,7 +2,7 @@
 // the output directory and writes the dossier the judge reads, built by
 // the kit's dossier library from exactly the files handed in.
 
-import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildDossier } from './vendor/makefun-game.ts';
@@ -18,8 +18,13 @@ const DOSSIER_CAPS = {
   game_path_max_bytes: 1000,
 };
 
-rmSync(outputDir, { recursive: true, force: true });
+// Clear the output directory's contents without removing the directory
+// itself: on the grader it is a mounted volume, and removing the mount
+// point fails. Everything inside is removed; the directory stays.
 mkdirSync(outputDir, { recursive: true });
+for (const entry of readdirSync(outputDir)) {
+  rmSync(join(outputDir, entry), { recursive: true, force: true });
+}
 cpSync(join(repoRoot, 'game'), join(outputDir, 'game'), { recursive: true });
 cpSync(join(repoRoot, 'screenshots'), join(outputDir, 'screenshots'), { recursive: true });
 
